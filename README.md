@@ -10,4 +10,4 @@
 Please see the `key_number_tracking.ipynb`.
 
 ## Customize
-By default, it downloads AAPL and MSFT. If you need more tickers, run `download.py -ticker {your_ticker}`.
+By default, it downloads AAPL and MSFT. If you need more tickers, run `python download.py -ticker {your_ticker}`.
