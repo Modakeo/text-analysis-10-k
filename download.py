@@ -35,43 +35,46 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-    edgar_fold = 'sec-edgar-filings'
-    args = parse_args()
-    form_type = '10-K'
-    after_year = args.after
-    if args.ticker:
-        tickers = [args.ticker]
-    else:
-        tickers = ['AAPL', 'MSFT'] # ,'JPM','ADSK','IBM'
-    print(tickers, after_year)
-
+def download(form_type="10-K", ticker='AAPL', after_year='1995', edgar_fold='sec-edgar-filings'):
     dl = Downloader("RandomName", "RandomEmail@domain.com",'./')
 
+    for year in range(int(after_year),2024):
+        print(f'Downloading {form_type} for {ticker} in {year}...')
+        dl.get(form_type, ticker, after=f'{year}-01-01', before=f'{year}-12-31', download_details='8-K HTML')
+
+        temp_f = os.path.join(edgar_fold, ticker, form_type,)
+        # check if only one folder is present
+        folders = [name for name in os.listdir(temp_f) if os.path.isdir(os.path.join(temp_f, name))]
+        if len(folders) > 1:
+            raise Exception(f'Error: {len(folders)} folders found for {ticker} in {year}')
+        elif len(folders) == 0:
+            print(f'No {form_type} found for {ticker} in {year}...continuing...')
+            continue
+        folder = folders[0]
+        
+        # move the file to the root folder
+        target = os.path.join(temp_f, folder, 'full-submission.txt')
+        destination = os.path.join(temp_f, f'{ticker}-{form_type}-{year}.txt')
+        shutil.move(target, destination)
+        # delete the folder
+        shutil.rmtree(os.path.join(temp_f, folder))
+
+def download_all(form_type="10-K", tickers=['AAPL', 'MSFT'], after_year='1995', edgar_fold='sec-edgar-filings'):
     for ticker in tickers:
-        for year in range(int(after_year),2024):
-            print(f'Downloading {form_type} for {ticker} in {year}...')
-            dl.get(form_type, ticker, after=f'{year}-01-01', before=f'{year}-12-31', download_details='8-K HTML')
-
-            temp_f = os.path.join(edgar_fold, ticker, form_type,)
-            # check if only one folder is present
-            folders = [name for name in os.listdir(temp_f) if os.path.isdir(os.path.join(temp_f, name))]
-            if len(folders) > 1:
-                raise Exception(f'Error: {len(folders)} folders found for {ticker} in {year}')
-            elif len(folders) == 0:
-                print(f'No {form_type} found for {ticker} in {year}...continuing...')
-                continue
-            folder = folders[0]
-            
-            # move the file to the root folder
-            target = os.path.join(temp_f, folder, 'full-submission.txt')
-            destination = os.path.join(temp_f, f'{ticker}-{form_type}-{year}.txt')
-            shutil.move(target, destination)
-            # delete the folder
-            shutil.rmtree(os.path.join(temp_f, folder))
-
+        download(form_type, ticker, after_year, edgar_fold)
 
     for ticker in tickers:
         names = [i for i in os.listdir(os.path.join(edgar_fold, ticker, form_type))]
         names.sort(key=lambda x: int(x.split('-')[1]))
         print(ticker, len(names))
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    if args.ticker:
+        tickers = [args.ticker]
+    else:
+        tickers = ['AAPL', 'MSFT'] # ,'JPM','ADSK','IBM'
+
+    print(f'requests: {tickers} after {args.after}...')
+    download_all(form_type='10-K', tickers=tickers, after_year=args.after)

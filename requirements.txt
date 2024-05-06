@@ -1,3 +1,4 @@
 sec-edgar-downloader
 pandas
 llama-index
+beautifulsoup4
