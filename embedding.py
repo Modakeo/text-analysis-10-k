@@ -26,16 +26,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def get_openai_api_key():
-    if not os.path.exists('openai_api_key.txt'):
-        if 'OPENAI_API_KEY' not in os.environ:
-            raise ValueError("OPENAI_API_KEY not found in environment variables or openai_api_key.txt")
-        else:
-            key = os.environ.get('OPENAI_API_KEY')
+    if 'OPENAI_API_KEY' in os.environ:
+        key = os.environ.get('OPENAI_API_KEY')
     else:
-        with open('openai_api_key.txt', 'r') as f:
-            key = f.read().strip()
-            if key == '':
-                raise ValueError("openai_api_key.txt is empty")
+        if os.path.exists('openai_api_key.txt'):
+            with open('openai_api_key.txt', 'r') as f:
+                key = f.read().strip()
+                if key == '':
+                    raise ValueError("openai_api_key.txt is empty")
+        else:
+            raise ValueError("openai_api_key.txt or OPENAI_API_KEY not found")
     print('API key found')
     return key
             
